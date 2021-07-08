@@ -1,0 +1,23 @@
+{
+  "name": "p6_betatest",
+  "version": "1.0.0",
+  "description": "Piiquante  web app called \"Hot Takes.\"",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/louvelmathieu/P6_Betatest.git"
+  },
+  "author": "LOUVEL Mathieu",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/louvelmathieu/P6_Betatest/issues"
+  },
+  "homepage": "https://github.com/louvelmathieu/P6_Betatest#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "mongoose": "^5.13.2"
+  }
+}
