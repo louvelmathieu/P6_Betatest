@@ -2,6 +2,7 @@ const User = require('../models/user');
 const jwt = require('jsonwebtoken');
 const mongoMask = require('mongo-mask')
 const bcrypt = require('bcrypt');
+require('dotenv').config();
 
 /**
  * Hashes user password, adds user to database.
@@ -38,7 +39,7 @@ exports.login = (req, res, next) => {
                         userId: user._id,
                         token: jwt.sign(
                             {userId: user._id},
-                            'RANDOM_TOKEN_SECRET',
+                            process.env.JWT_KEY,
                             {expiresIn: '24h'}
                         )
                     });

@@ -7,7 +7,7 @@ module.exports = app;
 app.use(express.json())
 app.use('/images', express.static(path.join(__dirname, 'images')));
 
-mongoose.connect('mongodb+srv://root:LiGUdDP6H67h43L@cluster0.lgnuk.mongodb.net/myFirstDatabase?retryWrites=true&w=majority',
+mongoose.connect(process.env.MONGO_URL,
     {
         useNewUrlParser: true,
         useUnifiedTopology: true

@@ -51,14 +51,21 @@ exports.update = (req, res, next) => {
             imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
         } : {...req.body};
 
-    delete sauceObject.likes;
-    delete sauceObject.dislikes;
-    delete sauceObject.usersLiked;
-    delete sauceObject.usersDisliked;
+    Sauce.findOne({_id: req.params.id})
+        .then(sauce => {
+            if (sauce.userId != req.userId) {
+                res.status(401).json({message: 'User not allowed to delete this sauce'});
+            } else {
+                delete sauceObject.likes;
+                delete sauceObject.dislikes;
+                delete sauceObject.usersLiked;
+                delete sauceObject.usersDisliked;
 
-    Sauce.updateOne({_id: req.params.id}, {...sauceObject, _id: req.params.id})
-        .then(() => res.status(200).json({message: 'Objet modifié !'}))
-        .catch(error => res.status(400).json({message: error.toString()}));
+                Sauce.updateOne({_id: req.params.id}, {...sauceObject, _id: req.params.id})
+                    .then(() => res.status(200).json({message: 'Objet modifié !'}))
+                    .catch(error => res.status(400).json({message: error.toString()}));
+            }
+        });
 };
 
 /**
@@ -67,12 +74,16 @@ exports.update = (req, res, next) => {
 exports.delete = (req, res, next) => {
     Sauce.findOne({_id: req.params.id})
         .then(sauce => {
-            const filename = sauce.imageUrl.split('/images/')[1];
-            fs.unlink(`images/${filename}`, () => {
-                Sauce.deleteOne({_id: req.params.id})
-                    .then(() => res.status(200).json({message: 'Objet supprimé !'}))
-                    .catch(error => res.status(400).json({message: error.toString()}));
-            });
+            if (sauce.userId != req.userId) {
+                res.status(401).json({message: 'User not allowed to delete this sauce'});
+            } else {
+                const filename = sauce.imageUrl.split('/images/')[1];
+                fs.unlink(`images/${filename}`, () => {
+                    Sauce.deleteOne({_id: req.params.id})
+                        .then(() => res.status(200).json({message: 'Objet supprimé !'}))
+                        .catch(error => res.status(400).json({message: error.toString()}));
+                });
+            }
         })
         .catch(error => res.status(500).json({message: error.toString()}));
 };
@@ -83,7 +94,6 @@ exports.delete = (req, res, next) => {
 exports.like = (req, res, next) => {
     Sauce.findOne({_id: req.params.id})
         .then(sauce => {
-
             switch (req.body.like) {
                 case 1 : // Like
                     if (sauce.usersLiked.includes(req.body.userId)) {
