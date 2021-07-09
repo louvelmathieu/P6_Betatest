@@ -1,4 +1,5 @@
 const Sauce = require('../models/sauce');
+const fs = require('fs');
 
 /**
  * Returns array of all sauces in the database.
@@ -13,16 +14,20 @@ exports.gets = (req, res, next) => {
  * Returns the sauce with the provided _id.
  */
 exports.get = (req, res, next) => {
-    res.send("API is up & running");
+    Sauce.findOne({_id: req.params.id})
+        .then(thing => res.status(200).json(thing))
+        .catch(error => res.status(404).json({error}));
 };
 
 /**
  * Captures and saves image, parses stringified sauce and saves it to the database, setting its imageUrl correctly. Initializes sauces likes and dislikes to 0, and usersLiked and usersDisliked to empty arrays. Note that the initial body request is empty; when multer is added it returns a string for the body request based on the data submitted with the file.
  */
 exports.create = (req, res, next) => {
-    delete req.body._id;
+    const sauceObject = JSON.parse(req.body.sauce);
+    delete sauceObject._id;
     const sauce = new Sauce({
-        ...req.body
+        ...sauceObject,
+        imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
     });
     sauce.save()
         .then(() => res.status(201).json({message: 'Objet enregistré !'}))
@@ -33,14 +38,30 @@ exports.create = (req, res, next) => {
  * Updates the sauce with the provided _id. If an image is uploaded, capture it and update the sauces imageUrl. If no file is provided, the sauce details are directly within the request body (req.body.name, req.body.heat etc). If a file is provided, the stringified sauce is in req.body.sauce. Note that initial body request is empty; when multer is added it returns a string of the body request based on the data submitted with the file.
  */
 exports.update = (req, res, next) => {
-    res.send("API is up & running");
+    const sauceObject = req.file ?
+        {
+            ...JSON.parse(req.body.sauce),
+            imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
+        } : {...req.body};
+    Sauce.updateOne({_id: req.params.id}, {...sauceObject, _id: req.params.id})
+        .then(() => res.status(200).json({message: 'Objet modifié !'}))
+        .catch(error => res.status(400).json({error}));
 };
 
 /**
  * Deletes the sauce with the provided _id.
  */
 exports.delete = (req, res, next) => {
-    res.send("API is up & running");
+    Sauce.findOne({_id: req.params.id})
+        .then(sauce => {
+            const filename = sauce.imageUrl.split('/images/')[1];
+            fs.unlink(`images/${filename}`, () => {
+                Sauce.deleteOne({_id: req.params.id})
+                    .then(() => res.status(200).json({message: 'Objet supprimé !'}))
+                    .catch(error => res.status(400).json({error}));
+            });
+        })
+        .catch(error => res.status(500).json({error}));
 };
 
 /**
