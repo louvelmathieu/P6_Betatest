@@ -81,5 +81,54 @@ exports.delete = (req, res, next) => {
  * Sets “like'' status for the userId provided. If like = 1, the user likes the sauce. If like = 0, the user is cancelling their like or dislike. If like = -1, the user dislikes the sauce. The user's ID must be added to or removed from the appropriate array, keeping track of their preferences and preventing them from liking or disliking the same sauce multiple times. Total number of likes and dislikes to be updated with each like.
  */
 exports.like = (req, res, next) => {
-    res.send("API is up & running");
+    Sauce.findOne({_id: req.params.id})
+        .then(sauce => {
+
+            switch (req.body.like) {
+                case 1 : // Like
+                    if (sauce.usersLiked.includes(req.body.userId)) {
+                        // Do nothing
+                        res.status(200).json({message: 'User already like'})
+                        return
+                    } else {
+                        sauce.likes++;
+                        sauce.usersLiked.push(req.body.userId)
+                    }
+
+                    if (sauce.usersDisliked.includes(req.body.userId)) {
+                        sauce.usersDisliked = sauce.usersDisliked.filter(e => e !== req.params.userId);
+                        sauce.dislikes--;
+                    }
+                    break;
+                case 0 :
+                    if (sauce.usersLiked.includes(req.body.userId)) {
+                        sauce.likes--;
+                        sauce.usersLiked = sauce.usersLiked.filter(e => e !== req.body.userId);
+                    }
+                    if (sauce.usersDisliked.includes(req.body.userId)) {
+                        sauce.dislikes--;
+                        sauce.usersDisliked = sauce.usersDisliked.filter(e => e !== req.body.userId);
+                    }
+                    break;
+                case -1 : // Dislike
+                    if (sauce.usersDisliked.includes(req.body.userId)) {
+                        // Do nothing
+                        res.status(200).json({message: 'User already dislike'})
+                        return
+                    } else {
+                        sauce.dislikes++;
+                        sauce.usersDisliked.push(req.body.userId)
+                    }
+
+                    if (sauce.usersLiked.includes(req.body.userId)) {
+                        sauce.usersLiked = sauce.usersLiked.filter(e => e !== req.body.userId);
+                        sauce.likes--;
+                    }
+                    break;
+            }
+            sauce.save()
+                .then(() => res.status(200).json({message: 'Objet modifié !'}))
+                .catch(error => res.status(400).json({message: error.toString()}));
+        })
+        .catch(error => res.status(500).json({message: error.toString()}));
 };
