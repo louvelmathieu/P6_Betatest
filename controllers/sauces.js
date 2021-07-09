@@ -53,6 +53,12 @@ exports.update = (req, res, next) => {
 
     Sauce.findOne({_id: req.params.id})
         .then(sauce => {
+            if (sauceObject.imageUrl) {
+                const filename = sauce.imageUrl.split('/images/')[1];
+                fs.unlink(`images/${filename}`, () => {
+                });
+            }
+
             if (sauce.userId != req.userId) {
                 res.status(401).json({message: 'User not allowed to delete this sauce'});
             } else {
