@@ -1,5 +1,6 @@
 const User = require('../models/user');
 const jwt = require('jsonwebtoken');
+const mongoMask = require('mongo-mask')
 const bcrypt = require('bcrypt');
 
 /**
@@ -23,7 +24,7 @@ exports.signup = (req, res, next) => {
  * Checks user credentials, returning the user's _id from the database and a signed JSON web token (also containing the user's _id).
  */
 exports.login = (req, res, next) => {
-    User.findOne({ email: req.body.email })
+    User.findOne({ email: req.body.email }, mongoMask({'_id': '_id', 'password': 'password'}))
         .then(user => {
             if (!user) {
                 return res.status(401).json({ error: 'Utilisateur non trouvé !' });
